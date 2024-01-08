@@ -1,0 +1,49 @@
+import unittest
+from tkinter import Tk
+from unittest.mock import patch
+from your_module_name import VoucherTestingSystem
+
+class TestVoucherTestingSystem(unittest.TestCase):
+    def setUp(self):
+        self.root = Tk()
+        self.app = VoucherTestingSystem(self.root)
+
+    def tearDown(self):
+        self.root.destroy()
+
+    def test_valid_voucher(self):
+        with patch.object(self.app, 'is_valid_voucher', return_value=True):
+            self.app.voucher_entry.insert(0, "ABC123")
+            self.app.validate_voucher()
+            self.assertEqual(self.app.result_label.cget("text"), "Valid Voucher! Enjoy your discount.")
+
+    def test_invalid_voucher(self):
+        with patch.object(self.app, 'is_valid_voucher', return_value=False):
+            self.app.voucher_entry.insert(0, "XYZ789")
+            self.app.validate_voucher()
+            self.assertEqual(self.app.result_label.cget("text"), "Invalid Voucher. Please enter a valid code.")
+
+    def test_empty_voucher_entry(self):
+        self.app.validate_voucher()
+        self.assertEqual(self.app.result_label.cget("text"), "Please enter a voucher code.")
+
+    def test_clear_entry(self):
+        self.app.voucher_entry.insert(0, "ABC123")
+        self.app.clear_entry()
+        self.assertEqual(self.app.voucher_entry.get(), "")
+        self.assertEqual(self.app.result_label.cget("text"), "")
+
+    def test_save_voucher(self):
+        with patch("builtins.open", create=True) as mock_open:
+            mock_file = mock_open.return_value
+            self.app.voucher_entry.insert(0, "ABC123")
+            self.app.save_voucher()
+            mock_file.write.assert_called_once_with("ABC123\n")
+            self.assertEqual(self.app.result_label.cget("text"), "Voucher saved successfully.")
+
+    def test_save_empty_voucher(self):
+        self.app.save_voucher()
+        self.assertEqual(self.app.result_label.cget("text"), "Please enter a voucher code to save.")
+
+if __name__ == '__main__':
+    unittest.main()
